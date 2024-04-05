@@ -111,35 +111,48 @@ def get(
             request_params["offset"] = int(len(response_data))
 
         for record in response_data:
-            LOGGER.debug(f"Domain: {domain_name} - Records")
-            LOGGER.debug(record)
-            if record["type"] in interesting_records_types:
-                LOGGER.debug(f"Domain: {domain_name} - Contains {record['type']}")
+            LOGGER.debug(
+                f"Domain: {domain_name} - Type: {record['type']} - Name: {record['name']} - Data: {record['data']}"
+            )
+
+            if record["type"] not in interesting_records_types:
+                LOGGER.debug(f"Type: {record['type']} - Not Interested")
+            else:
+                interesting_records_names: list = list(
+                    interesting_records_loads[record["type"]].keys()
+                )
+                LOGGER.debug(
+                    f"Type: {record['type']} - Interesting Record Names: {interesting_records_names}"
+                )
+
                 match record["type"]:
                     case "A":
-                        interesting_records_names: list = list(
-                            interesting_records_loads[record["type"]].keys()
-                        )
-                        LOGGER.debug(
-                            f"Interesting Record Names: {interesting_records_names}"
-                        )
-                        if record["name"] in interesting_records_names:
+                        if record["name"] not in interesting_records_names:
+                            LOGGER.debug(
+                                f"Type: {record['type']} - Name: {record['name']} - Not Interested"
+                            )
+                        else:
                             interesting_records_data: list = interesting_records_loads[
                                 record["type"]
                             ][record["name"]]
                             LOGGER.debug(
-                                f"Interesting Record Data: {interesting_records_data}"
+                                f"Type: {record['type']} - Name: {record['name']} - Interesting Record Data: {interesting_records_data}"
                             )
+
                             if len(interesting_records_data) == 0:
                                 domain_records_list_entry: dict = {
-                                    record["type"]: "asdf"
+                                    record["name"]: record["data"]
                                 }
                                 domain_records_list.append(domain_records_list_entry)
                             elif record["data"] in interesting_records_data:
                                 domain_records_list_entry: dict = {
-                                    record["type"]: "asdf"
+                                    record["name"]: record["data"]
                                 }
                                 domain_records_list.append(domain_records_list_entry)
+                    case "CNAME":
+                        LOGGER.debug(
+                            f'Interesting Record Data Search Methods: {interesting_records_loads[record["type"]]}'
+                        )
                     case _:
                         LOGGER.debug(
                             f"Domain: {domain_name} - Record Type: {record['type']} - Unhandled Record Type"
