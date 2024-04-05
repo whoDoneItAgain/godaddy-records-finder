@@ -14,6 +14,7 @@ def get(
     api_secret: str,
     domain_status: str,
     endpoint_url: str,
+    record_count: int | None,
 ) -> tuple[list[str], list[str], list[str]]:
 
     request_header: dict = {
@@ -124,6 +125,21 @@ def get(
             else:
                 LOGGER.debug(f"Domain Name - {rdd['domain']} - Skipping")
                 skipped_domain_list.append(rdd["domain"])
+
+            total_domains_count = (
+                len(gd_domain_list)
+                + len(external_domain_list)
+                + len(skipped_domain_list)
+            )
+            LOGGER.debug(
+                f"Record Count: {record_count} - Total Domain Count: {total_domains_count}"
+            )
+            if record_count != 0 and total_domains_count == record_count:
+                break_it: bool = True
+                break
+
+        if break_it:
+            break
 
     LOGGER.debug("Getting Domain Names. Complete.")
 

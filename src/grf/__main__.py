@@ -22,6 +22,7 @@ def main():
         api_secret=config_args.secret,
         domain_status=config_args.domain_status,
         endpoint_url=config_args.endpoint,
+        record_count=config_args.record_count,
     )
 
     export_file = Path(config_args.export_file).absolute()
@@ -49,7 +50,8 @@ def main():
 
         with open(export_file, "r") as ef:
             export_list: dict = json.load(ef)
-        export_list[list(domain_records_list.keys())[0]] = domain_records_list
+
+        export_list.update(domain_records_list)
         with open(export_file, "w") as ef:
             json.dump(export_list, ef)
 

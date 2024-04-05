@@ -43,6 +43,12 @@ def get_config_args():
         default="tmp/export.json",
     )
 
+    parser.add_argument(
+        "--record-count",
+        action="store",
+        type=int,
+    )
+
     args = parser.parse_args()
 
     return args
