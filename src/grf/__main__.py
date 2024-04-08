@@ -1,5 +1,6 @@
 import json
 import logging
+import sys
 from pathlib import Path
 
 from .config import configure_logging, get_config_args
@@ -9,6 +10,7 @@ LOGGER = logging.getLogger("grf")
 
 
 def main():
+    assert sys.version_info >= (3, 12)
 
     config_args = get_config_args()
     print(config_args)

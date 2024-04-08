@@ -5,8 +5,6 @@ from pathlib import Path
 
 import requests
 
-from .exceptions import StatusCodeException
-
 LOGGER = logging.getLogger("grf")
 
 
@@ -43,67 +41,51 @@ def get(
 
     i: int = 0
     while more_response:
-        try:
-            LOGGER.debug(f"Api Call Url: {endpoint_url}{api_path}")
-            LOGGER.debug(f"Api Call Params: {request_params}")
-            LOGGER.debug(f"Api Call Header: {request_header}")
-            api_response = requests.get(
-                f"{endpoint_url}{api_path}",
-                params=request_params,
-                headers=request_header,
-            )
 
-            response_data = api_response.json()
+        LOGGER.debug(f"Api Call Url: {endpoint_url}{api_path}")
+        LOGGER.debug(f"Api Call Params: {request_params}")
+        LOGGER.debug(f"Api Call Header: {request_header}")
 
-            if api_response.status_code == 429:
-                LOGGER.warning("Too many requests received within interval")
-                LOGGER.warning(
-                    f"Retying After {response_data['retryAfterSec']} seconds"
-                )
-                time.sleep(response_data["retryAfterSec"])
-            if api_response.status_code != 200:
-                raise StatusCodeException(api_response)
+        while True:
 
-            if i == 0 and len(response_data) < api_limit:
-                LOGGER.debug(
-                    f"Domain: {domain_name} - Retrieved all {len(response_data)} records."
-                )
-            elif i == 0 and len(response_data) == api_limit:
-                LOGGER.debug(
-                    f"Domain: {domain_name} - Retrieved first {api_limit} records."
-                )
-            elif len(response_data) == api_limit:
-                LOGGER.debug(
-                    f"Domain: {domain_name} - Retrieved next {api_limit} records."
-                )
-            elif len(response_data) < api_limit:
-                LOGGER.debug(
-                    f"Domain: {domain_name} - Retrieved last {len(response_data)} records."
-                )
-            i += 1
+            try:
 
-        except StatusCodeException as e:
-            match e.api_response.status_code:
-                case 400:
-                    raise Exception("Malformed Request")
-                case 401:
-                    raise Exception("Authentication info not sent or invalid")
-                case 403:
-                    raise Exception("Authenticated user is not allowed access")
-                case 404:
-                    raise Exception("Resource Not Found")
-                case 422:
-                    raise Exception("Record does not fulfill the schema")
-                case 429:
-                    pass
-                case 500:
-                    raise Exception("Internal Server Error")
-                case 504:
-                    raise Exception("Gateway Timeout")
-                case _:
-                    raise Exception(
-                        f"Unknown Exception. Status Code: {e.api_response.status_code}"
+                api_response = requests.get(
+                    f"{endpoint_url}{api_path}",
+                    params=request_params,
+                    headers=request_header,
+                )
+
+                response_data = api_response.json()
+
+                if api_response.status_code == 429:
+                    LOGGER.warning("Too many requests received within interval")
+                    LOGGER.warning(
+                        f"Retying After {response_data['retryAfterSec']} seconds"
                     )
+                    time.sleep(response_data["retryAfterSec"])
+
+                else:
+                    break
+
+            except Exception as e:
+                LOGGER.debug(e)
+
+        if i == 0 and len(response_data) < api_limit:
+            LOGGER.debug(
+                f"Domain: {domain_name} - Retrieved all {len(response_data)} records."
+            )
+        elif i == 0 and len(response_data) == api_limit:
+            LOGGER.debug(
+                f"Domain: {domain_name} - Retrieved first {api_limit} records."
+            )
+        elif len(response_data) == api_limit:
+            LOGGER.debug(f"Domain: {domain_name} - Retrieved next {api_limit} records.")
+        elif len(response_data) < api_limit:
+            LOGGER.debug(
+                f"Domain: {domain_name} - Retrieved last {len(response_data)} records."
+            )
+        i += 1
 
         if len(response_data) < api_limit:
             more_response = False
@@ -124,14 +106,13 @@ def get(
                 LOGGER.debug(
                     f"Type: {record['type']} - Interesting Record Names: {interesting_records_names}"
                 )
-
-                match record["type"]:
-                    case "A":
-                        if record["name"] not in interesting_records_names:
-                            LOGGER.debug(
-                                f"Type: {record['type']} - Name: {record['name']} - Not Interested"
-                            )
-                        else:
+                if record["name"] not in interesting_records_names:
+                    LOGGER.debug(
+                        f"Type: {record['type']} - Name: {record['name']} - Not Interested"
+                    )
+                else:
+                    match record["type"]:
+                        case "A":
                             interesting_records_data: list = interesting_records_loads[
                                 record["type"]
                             ][record["name"]]
@@ -149,15 +130,41 @@ def get(
                                     record["name"]: record["data"]
                                 }
                                 domain_records_list.append(domain_records_list_entry)
-                    case "CNAME":
-                        LOGGER.debug(
-                            f'Interesting Record Data Search Methods: {interesting_records_loads[record["type"]]}'
-                        )
-                    case _:
-                        LOGGER.debug(
-                            f"Domain: {domain_name} - Record Type: {record['type']} - Unhandled Record Type"
-                        )
-                        LOGGER.debug(record)
+                        case "CNAME":
+                            search_methods: list = list(
+                                interesting_records_loads[record["type"]][
+                                    record["name"]
+                                ].keys()
+                            )
+                            LOGGER.debug(
+                                f"Interesting Record Data Search Methods: {search_methods}"
+                            )
+                            for method in search_methods:
+                                interesting_records_data_values = (
+                                    interesting_records_loads[record["type"]][
+                                        record["name"]
+                                    ][method]
+                                )
+                                match str(method):
+                                    case "endsWith":
+                                        if (record["data"]).endswith(
+                                            tuple(interesting_records_data_values)
+                                        ):
+                                            domain_records_list_entry: dict = {
+                                                record["name"]: record["data"]
+                                            }
+                                            domain_records_list.append(
+                                                domain_records_list_entry
+                                            )
+                                    case _:
+                                        LOGGER.debug(
+                                            f"Domain: {domain_name} - Record Type: {record['type']} - Record Name: {record['name']} - Search Method: {method} - Unhandled Record Search Method"
+                                        )
+                        case _:
+                            LOGGER.debug(
+                                f"Domain: {domain_name} - Record Type: {record['type']} - Unhandled Record Type"
+                            )
+                            LOGGER.debug(record)
 
     LOGGER.debug(f"Domain: {domain_name} - Getting Domain Records. Complete.")
 

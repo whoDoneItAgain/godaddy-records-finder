@@ -3,8 +3,6 @@ import time
 
 import requests
 
-from .exceptions import StatusCodeException
-
 LOGGER = logging.getLogger("grf")
 
 
@@ -39,55 +37,43 @@ def get(
 
     i: int = 0
     while more_domains:
-        try:
-            LOGGER.debug(f"Api Call Url: {endpoint_url}{api_path}")
-            LOGGER.debug(f"Api Call Params: {request_params}")
-            LOGGER.debug(f"Api Call Header: {request_header}")
-            api_response = requests.get(
-                f"{endpoint_url}{api_path}",
-                params=request_params,
-                headers=request_header,
-            )
 
-            response_data = api_response.json()
+        LOGGER.debug(f"Api Call Url: {endpoint_url}{api_path}")
+        LOGGER.debug(f"Api Call Params: {request_params}")
+        LOGGER.debug(f"Api Call Header: {request_header}")
 
-            if api_response.status_code == 429:
-                LOGGER.warning("Too many requests received within interval")
-                LOGGER.warning(
-                    f"Retying After {response_data['retryAfterSec']} seconds"
+        while True:
+            try:
+
+                api_response = requests.get(
+                    f"{endpoint_url}{api_path}",
+                    params=request_params,
+                    headers=request_header,
                 )
-                time.sleep(response_data["retryAfterSec"])
-            if api_response.status_code != 200:
-                raise StatusCodeException(api_response)
 
-            if i == 0 and len(response_data) < api_limit:
-                LOGGER.debug(f"Retrieved all {len(response_data)} Domain Names.")
-            elif i == 0 and len(response_data) == api_limit:
-                LOGGER.debug(f"Retrieved first {api_limit} Domain Names.")
-            elif len(response_data) == api_limit:
-                LOGGER.debug(f"Retrieved next {api_limit} Domain Names.")
-            elif len(response_data) < api_limit:
-                LOGGER.debug(f"Retrieved last {len(response_data)} Domain Names.")
-            i += 1
+                response_data = api_response.json()
 
-        except StatusCodeException as e:
-            match e.api_response.status_code:
-                case 400:
-                    raise Exception("Malformed Request")
-                case 401:
-                    raise Exception("Authentication info not sent or invalid")
-                case 403:
-                    raise Exception("Authenticated user is not allowed access")
-                case 422:
-                    raise Exception("Limit must have a value no greater than 1000")
-                case 429:
-                    pass
-                case 500:
-                    raise Exception("Internal Server Error")
-                case _:
-                    raise Exception(
-                        f"Unknown Exception. Status Code: {e.api_response.status_code}"
+                if api_response.status_code == 429:
+                    LOGGER.warning("Too many requests received within interval")
+                    LOGGER.warning(
+                        f"Retying After {response_data['retryAfterSec']} seconds"
                     )
+                    time.sleep(response_data["retryAfterSec"])
+                else:
+                    break
+            except Exception as e:
+                LOGGER.debug(e)
+
+        if i == 0 and len(response_data) < api_limit:
+            LOGGER.debug(f"Retrieved all {len(response_data)} Domain Names.")
+        elif i == 0 and len(response_data) == api_limit:
+            LOGGER.debug(f"Retrieved first {api_limit} Domain Names.")
+        elif len(response_data) == api_limit:
+            LOGGER.debug(f"Retrieved next {api_limit} Domain Names.")
+        elif len(response_data) < api_limit:
+            LOGGER.debug(f"Retrieved last {len(response_data)} Domain Names.")
+
+        i += 1
 
         if len(response_data) < api_limit:
             more_domains = False
@@ -95,6 +81,7 @@ def get(
             request_params["marker"] = response_data[-1]["domain"]
 
         for rdd in response_data:
+            break_it: bool = False
             if rdd["nameServers"] is None:
                 LOGGER.debug(f"Domain Name - {rdd['domain']} - Confirming nameservers.")
                 nameservers = get_domain_nameservers(
@@ -165,11 +152,12 @@ def get_domain_nameservers(
 
     LOGGER.debug(f"Getting Domain Name - {domain_name}")
 
+    LOGGER.debug(f"Api Call Url: {endpoint_url}{api_path}")
+    LOGGER.debug(f"Api Call Params: {request_params}")
+    LOGGER.debug(f"Api Call Header: {request_header}")
+
     while True:
         try:
-            LOGGER.debug(f"Api Call Url: {endpoint_url}{api_path}")
-            LOGGER.debug(f"Api Call Params: {request_params}")
-            LOGGER.debug(f"Api Call Header: {request_header}")
             api_response = requests.get(
                 f"{endpoint_url}{api_path}",
                 params=request_params,
@@ -184,28 +172,11 @@ def get_domain_nameservers(
                     f"Retying After {response_data['retryAfterSec']} seconds"
                 )
                 time.sleep(response_data["retryAfterSec"])
-            if api_response.status_code != 200:
-                raise StatusCodeException(api_response)
+            else:
+                break
 
-            break
-        except StatusCodeException as e:
-            match e.api_response.status_code:
-                case "400":
-                    raise Exception("Malformed Request")
-                case "401":
-                    raise Exception("Authentication info not sent or invalid")
-                case "403":
-                    raise Exception("Authenticated user is not allowed access")
-                case "422":
-                    raise Exception("Limit must have a value no greater than 1000")
-                case 429:
-                    pass
-                case "500":
-                    raise Exception("Internal Server Error")
-                case _:
-                    raise Exception(
-                        f"Unknown Exception. Status Code: {e.api_response.status_code}"
-                    )
+        except Exception as e:
+            LOGGER.debug(e)
 
     LOGGER.debug(f"Getting Domain Name - {domain_name}. Complete")
 
