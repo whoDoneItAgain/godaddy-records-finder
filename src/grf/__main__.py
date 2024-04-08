@@ -2,8 +2,8 @@ import json
 import logging
 from pathlib import Path
 
-from config import configure_logging, get_config_args
-from request_handlers import domain_records, domains
+from .config import configure_logging, get_config_args
+from .request_handlers import domain_records, domains
 
 LOGGER = logging.getLogger("grf")
 
@@ -34,7 +34,7 @@ def main():
             "Skipped Domain Names": skipped_domain_list,
         }
 
-        json.dump(domain_list_dict, ef)
+        json.dump(domain_list_dict, ef, indent=2)
 
     for d in gd_domain_list:
         domain_records_list = domain_records.get(
@@ -53,7 +53,7 @@ def main():
 
         export_list.update(domain_records_list)
         with open(export_file, "w") as ef:
-            json.dump(export_list, ef)
+            json.dump(export_list, ef, indent=2)
 
 
 if __name__ == "__main__":
