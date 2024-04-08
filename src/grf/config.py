@@ -12,10 +12,12 @@ def get_config_args():
     parser.add_argument(
         "--debug-logging",
         action="store_true",
+        help="Enables Debug Level Logging",
     )
     parser.add_argument(
         "--info-logging",
         action="store_true",
+        help="Enables Info Level Logging. Not required if debug-logging is enabled",
     )
     parser.add_argument(
         "--api-limit",
@@ -30,24 +32,49 @@ def get_config_args():
         type=str,
         choices=["https://api.godaddy.com", "https://api.ote-godaddy.com"],
         required=True,
+        help="Which GoDaddy API endpoint to connect to. 'https://api.ote-godaddy.com' is their dev but has no data.",
     )
-    parser.add_argument("--key", action="store", type=str, required=True)
-    parser.add_argument("--secret", action="store", type=str, required=True)
     parser.add_argument(
-        "--interesting-records-file", action="store", type=str, required=True
+        "--key",
+        action="store",
+        type=str,
+        required=True,
+        help="API Key",
     )
-    parser.add_argument("--domain-status", action="store", type=str, default="ACTIVE")
+    parser.add_argument(
+        "--secret",
+        action="store",
+        type=str,
+        required=True,
+        help="API Secret",
+    )
+    parser.add_argument(
+        "--interesting-records-file",
+        action="store",
+        type=str,
+        required=True,
+        help="Path to Json file with records you are interested in",
+    )
+    parser.add_argument(
+        "--domain-status",
+        action="store",
+        type=str,
+        default="ACTIVE",
+        help="Which Domain Status to look at. (default: %(default)s)",
+    )
     parser.add_argument(
         "--export-file",
         action="store",
         type=str,
         default="tmp/export.json",
+        help="Where to Export File. (default: %(default)s)",
     )
 
     parser.add_argument(
         "--record-count",
         action="store",
         type=int,
+        help="How Many Records to inspect (first X records) (default: %(default)s)",
     )
 
     args = parser.parse_args()
