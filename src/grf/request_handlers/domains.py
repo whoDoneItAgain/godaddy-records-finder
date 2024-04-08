@@ -83,7 +83,7 @@ def get(
         for rdd in response_data:
             break_it: bool = False
             if rdd["nameServers"] is None:
-                LOGGER.debug(f"Domain Name - {rdd['domain']} - Confirming nameservers.")
+                LOGGER.info(f"Domain Name - {rdd['domain']} - Confirming nameservers.")
                 nameservers = get_domain_nameservers(
                     api_key=api_key,
                     api_secret=api_secret,
@@ -91,26 +91,24 @@ def get(
                     endpoint_url=endpoint_url,
                 )
                 if nameservers is None:
-                    LOGGER.debug(
+                    LOGGER.info(
                         f"Domain Name - {rdd['domain']} - Cannot confirm nameservers. Skipping"
                     )
                     skipped_domain_list.append(rdd["domain"])
                 elif any("domaincontrol.com" in s for s in nameservers):
-                    LOGGER.debug(
-                        f"Domain Name - {rdd['domain']} - GoDaddy nameservers."
-                    )
+                    LOGGER.info(f"Domain Name - {rdd['domain']} - GoDaddy nameservers.")
                     gd_domain_list.append(rdd["domain"])
                 else:
-                    LOGGER.debug(
+                    LOGGER.info(
                         f"Domain Name - {rdd['domain']} - External nameservers."
                     )
                     external_domain_list.append(rdd["domain"])
 
             elif any("domaincontrol.com" in s for s in rdd["nameServers"]):
-                LOGGER.debug(f"Domain Name - {rdd['domain']} - GoDaddy nameservers.")
+                LOGGER.info(f"Domain Name - {rdd['domain']} - GoDaddy nameservers.")
                 gd_domain_list.append(rdd["domain"])
             else:
-                LOGGER.debug(f"Domain Name - {rdd['domain']} - Skipping")
+                LOGGER.info(f"Domain Name - {rdd['domain']} - Skipping")
                 skipped_domain_list.append(rdd["domain"])
 
             total_domains_count = (
@@ -118,7 +116,7 @@ def get(
                 + len(external_domain_list)
                 + len(skipped_domain_list)
             )
-            LOGGER.debug(
+            LOGGER.info(
                 f"Record Count: {record_count} - Total Domain Count: {total_domains_count}"
             )
             if record_count != 0 and total_domains_count == record_count:
@@ -128,7 +126,7 @@ def get(
         if break_it:
             break
 
-    LOGGER.debug("Getting Domain Names. Complete.")
+    LOGGER.info("Getting Domain Names. Complete.")
 
     return gd_domain_list, external_domain_list, skipped_domain_list
 

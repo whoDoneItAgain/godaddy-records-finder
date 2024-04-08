@@ -48,7 +48,7 @@ def main():
             interesting_records=config_args.interesting_records_file,
         )
 
-        LOGGER.debug(f"Domain Record List: {domain_records_list}")
+        LOGGER.info(f"Domain Record List: {domain_records_list}")
 
         with open(export_file, "r") as ef:
             export_list: dict = json.load(ef)

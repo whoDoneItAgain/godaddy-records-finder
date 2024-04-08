@@ -30,7 +30,7 @@ def get(
     domain_records_list: list = []
     more_response: bool = True
 
-    LOGGER.debug(f"Domain: {domain_name} - Getting Domain Records.")
+    LOGGER.info(f"Domain: {domain_name} - Getting Domain Records.")
 
     interesting_records_file = Path(interesting_records).absolute()
 
@@ -93,21 +93,21 @@ def get(
             request_params["offset"] = int(len(response_data))
 
         for record in response_data:
-            LOGGER.debug(
+            LOGGER.info(
                 f"Domain: {domain_name} - Type: {record['type']} - Name: {record['name']} - Data: {record['data']}"
             )
 
             if record["type"] not in interesting_records_types:
-                LOGGER.debug(f"Type: {record['type']} - Not Interested")
+                LOGGER.info(f"Type: {record['type']} - Not Interested")
             else:
                 interesting_records_names: list = list(
                     interesting_records_loads[record["type"]].keys()
                 )
-                LOGGER.debug(
+                LOGGER.info(
                     f"Type: {record['type']} - Interesting Record Names: {interesting_records_names}"
                 )
                 if record["name"] not in interesting_records_names:
-                    LOGGER.debug(
+                    LOGGER.info(
                         f"Type: {record['type']} - Name: {record['name']} - Not Interested"
                     )
                 else:
@@ -116,7 +116,7 @@ def get(
                             interesting_records_data: list = interesting_records_loads[
                                 record["type"]
                             ][record["name"]]
-                            LOGGER.debug(
+                            LOGGER.info(
                                 f"Type: {record['type']} - Name: {record['name']} - Interesting Record Data: {interesting_records_data}"
                             )
 
@@ -136,7 +136,7 @@ def get(
                                     record["name"]
                                 ].keys()
                             )
-                            LOGGER.debug(
+                            LOGGER.info(
                                 f"Interesting Record Data Search Methods: {search_methods}"
                             )
                             for method in search_methods:
@@ -157,16 +157,16 @@ def get(
                                                 domain_records_list_entry
                                             )
                                     case _:
-                                        LOGGER.debug(
+                                        LOGGER.info(
                                             f"Domain: {domain_name} - Record Type: {record['type']} - Record Name: {record['name']} - Search Method: {method} - Unhandled Record Search Method"
                                         )
                         case _:
-                            LOGGER.debug(
+                            LOGGER.info(
                                 f"Domain: {domain_name} - Record Type: {record['type']} - Unhandled Record Type"
                             )
                             LOGGER.debug(record)
 
-    LOGGER.debug(f"Domain: {domain_name} - Getting Domain Records. Complete.")
+    LOGGER.info(f"Domain: {domain_name} - Getting Domain Records. Complete.")
 
     interesting_domain_records: dict = {
         domain_name: domain_records_list,
