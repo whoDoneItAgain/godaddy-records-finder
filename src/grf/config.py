@@ -3,6 +3,8 @@ import logging
 
 LOGGER = logging.getLogger("grf")
 
+API_LIMIT_RANGE = range(1, 501)
+
 
 def get_config_args():
     # Define the parser
@@ -18,10 +20,9 @@ def get_config_args():
     parser.add_argument(
         "--api-limit",
         action="store",
-        default=50,
+        default=500,
         type=int,
-        choices=range(1, 501),
-        help="Must be between 1 and 500. (default: %(default)s)",
+        help=f"Must be between {API_LIMIT_RANGE[0]} - {API_LIMIT_RANGE[-1]}. (default: %(default)s)",
     )
     parser.add_argument(
         "--endpoint",
@@ -50,6 +51,12 @@ def get_config_args():
     )
 
     args = parser.parse_args()
+
+    if args.api_limit not in API_LIMIT_RANGE:
+        LOGGER.error(
+            f"Api Limit not within range of {API_LIMIT_RANGE[0]} - {API_LIMIT_RANGE[-1]}"
+        )
+        quit(1)
 
     return args
 

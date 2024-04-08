@@ -13,7 +13,9 @@ def main():
     assert sys.version_info >= (3, 12)
 
     config_args = get_config_args()
-    print(config_args)
+
+    LOGGER.debug(f"Configuration Arguments - {config_args}")
+
     configure_logging(
         debug_logging=config_args.debug_logging, info_logging=config_args.info_logging
     )
