@@ -38,7 +38,7 @@ setup(
     install_requires=["requests==2.31.0"],
     python_requires=">=3.12, <=4.0, !=4.0",
     entry_points={"console_scripts": ["grf = grf.__main__:main"]},
-    test_suite="unittest",
+    url="https://github.com/whodoneitagain/godaddy-records-finder",
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
