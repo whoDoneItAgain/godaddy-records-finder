@@ -10,23 +10,6 @@ def get_config_args():
     # Define the parser
     parser = argparse.ArgumentParser(description="GoDaddy Record Finder")
     parser.add_argument(
-        "--debug-logging",
-        action="store_true",
-        help="Enables Debug Level Logging",
-    )
-    parser.add_argument(
-        "--info-logging",
-        action="store_true",
-        help="Enables Info Level Logging. Not required if debug-logging is enabled",
-    )
-    parser.add_argument(
-        "--api-limit",
-        action="store",
-        default=500,
-        type=int,
-        help=f"Must be between {API_LIMIT_RANGE[0]} - {API_LIMIT_RANGE[-1]}. (default: %(default)s)",
-    )
-    parser.add_argument(
         "--endpoint",
         action="store",
         type=str,
@@ -34,6 +17,7 @@ def get_config_args():
         required=True,
         help="Which GoDaddy API endpoint to connect to. 'https://api.ote-godaddy.com' is their dev but has no data.",
     )
+
     parser.add_argument(
         "--key",
         action="store",
@@ -48,6 +32,7 @@ def get_config_args():
         required=True,
         help="API Secret",
     )
+
     parser.add_argument(
         "--interesting-records-file",
         action="store",
@@ -55,19 +40,41 @@ def get_config_args():
         required=True,
         help="Path to Json file with records you are interested in",
     )
-    parser.add_argument(
-        "--domain-status",
-        action="store",
-        type=str,
-        default="ACTIVE",
-        help="Which Domain Status to look at. (default: %(default)s)",
-    )
+
     parser.add_argument(
         "--export-file",
         action="store",
         type=str,
         default="tmp/export.json",
         help="Where to Export File. (default: %(default)s)",
+    )
+
+    parser.add_argument(
+        "--debug-logging",
+        action="store_true",
+        help="Enables Debug Level Logging",
+    )
+
+    parser.add_argument(
+        "--info-logging",
+        action="store_true",
+        help="Enables Info Level Logging. Not required if debug-logging is enabled",
+    )
+
+    parser.add_argument(
+        "--api-limit",
+        action="store",
+        default=500,
+        type=int,
+        help=f"Must be between {API_LIMIT_RANGE[0]} - {API_LIMIT_RANGE[-1]}. (default: %(default)s)",
+    )
+
+    parser.add_argument(
+        "--domain-status",
+        action="store",
+        type=str,
+        default="ACTIVE",
+        help="Which Domain Status to look at. (default: %(default)s)",
     )
 
     parser.add_argument(
